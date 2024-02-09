@@ -1,8 +1,8 @@
 import os
-import time
-def userNew(name, last_name, email):
-    return f"Hola {name} {last_name} en breve recibirás un correo a {email}"
+import datetime
 
+users = []
+ids = []
 
 def validates(field, len_min, len_max, name_field):
     if len(field) >= len_min and len(field) <= len_max:
@@ -30,7 +30,8 @@ def register(num_user, ids):
     return user
 
 def idsAdd(num_user):
-    ids = num_user * int(time.clock_gettime(1))
+    date = datetime.datetime.now()
+    ids = num_user * (date.year + date.month + date.day + date.hour + date.minute + date.second + date.microsecond)
     id_hex = ""
     while ids > 0:
         aux = ids % 16
@@ -55,22 +56,7 @@ def idsAdd(num_user):
     return id_hex[::-1]
 
 
-def editUser():
-    print("Ingresa los datos del usuario")
-    name = validates(input("Ingresa su nombre: "), 5, 50, "nombre")
-    last_name = validates(input(f"Ingresa su apellido: "), 5, 50, "apellido")
-    number_phone = validates(input("Ingresa su numero de telefono: "), 10, 10, "numero de telefono")
-    email = validates(input("Ingresa su correo: "), 5, 50, "email")
-
-    edit_user = {
-        "name": name,
-        "last_name": last_name,
-        "number_phone": number_phone,
-        "email": email
-        }
-    return edit_user
-
-def findUserById(users, id_u):
+def findUserById(id_u):
     find = False
     find_user = ""
     for user in users:
@@ -78,53 +64,81 @@ def findUserById(users, id_u):
             find = True
             find_user = user
             break
+    return [find, find_user]
+
+
+def editUser(id_user):
+    print(f"Ingresa los datos del usuario {id_user}")
+    name = validates(input("Ingresa su nombre: "), 5, 50, "nombre")
+    last_name = validates(input(f"Ingresa su apellido: "), 5, 50, "apellido")
+    number_phone = validates(input("Ingresa su numero de telefono: "), 10, 10, "numero de telefono")
+    email = validates(input("Ingresa su correo: "), 5, 50, "email")
+
+    edit_user = {
+        "id": id_user,
+        "name": name,
+        "last_name": last_name,
+        "number_phone": number_phone,
+        "email": email
+        }
+    return edit_user
+
+
+def deleteUser(user):
+    users.remove(user)
+    #ids.remove(user["id"])
+
+
+def showUser(id):
+    find, user = findUserById(id)
+
     if find:
-        print(f"\nLos datos del usuario son: \nId = {find_user['id']}\nName = {find_user['name']}\nLast Name = {find_user['last_name']}\nNumber Phone = {find_user['number_phone']}\nEmail = {find_user['email']}\n")
+        print(f"\nLos datos del usuario son:\nId: {user['id']}\nName: {user['name']}\nLast Name: {user['last_name']}\nNumber Phone: {user['number_phone']}\nEmail: {user['email']}")
+        print("Deseas editar o eliminar el usuario? \n(0)Nada \n(1)Editar \n(2)Eliminar")
+        option = int(input("Ingresa tu opcion: "))
 
-        print("Deseas editar el usuario? Si(s) No(n)")
-        op = input("Ingresa tu opcion: ")
-        if op.lower() == "s":
-            edit_user = editUser()
-            find_user['name'] = edit_user["name"]
-            find_user['last_name'] = edit_user["last_name"]
-            find_user['number_phone'] = edit_user["number_phone"]
-            find_user['email'] = edit_user["email"]
-            print("Usuario editado con exito")
+        if option == 1:
+            users[users.index(user)] = editUser(user["id"])
+            print("El usuario ha sido editado con exito")
+        elif option == 2:
+            deleteUser(user)
+            print("El usuario ha sido eliminado con exito")
     else:
-        return "No se encontro usuario con ese id"
+        print("No se encontro el usuario")
+
+    menu()
 
 
-def menu(users = [], ids = []):
+def menu():
+    global users, ids
     #os.system("clear")
-    print("Menu: \n(1)Deseas registrar nuevos usuarios? \n(2)Deseas mostrar todos los ides de los usuarios? \n(3)Deseas mostrar los datos de un usuario por su id?")
+    print("Menu: \n(1)Deseas registrar nuevos usuarios? \n(2)Deseas listar todos los usuarios? \n(3)Deseas mostrar los datos de un usuario por su id?")
     option = int(input("Ingresa tu opcion: "))
     
     if option == 1:
         n = int(input("Cuantos usuarios deseas registrar: "))
         for i in range(n):
             ids.append(idsAdd(i+1))
-            users.append(register(i+1, ids[i]))
-            print(f"El Usuario {i+1} ha sido registrado con exito!!!!!")
-            print(f"En breve recibira un correo a {users[i]['email']}\n")
+            users.append(register(i+1, idsAdd(i+1)))
+            print(f"El Usuario {i+1} ha sido registrado con exito con el id {users[-1]['id']}!!!!!")
+            print(f"En breve recibira un correo a {users[-1]['email']}\n")
     elif option == 2:
-        for id in ids:
-            print(id)
+        for user in users:
+            print(f"Id: {user['id']} Name: {user['name']}")
     elif option == 3:
         id = input("Ingresa el id del usuario: ")
-        findUserById(users, id)
+        showUser(id)
     else:
         print("Ingresa una opcion valida")
         return menu(users, ids)
 
     print("Deseas volver al menu?")
     continue_ = input("Ingresa 'S' o 'N': ")
-    return menu(users, ids) if continue_.upper() == "S" else exit
+    return menu() if continue_.upper() == "S" else exit
 
 
 def main():
-    users = []
-    ids = []
-    menu(users, ids)
+    menu()
     print("Gracias por usar el programa")
 
     """
